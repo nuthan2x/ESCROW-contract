@@ -42,24 +42,25 @@ contract escrow{
         buyer_payment();
     }
 
-    function contract_START() public{
+    function contract_START_BUYER() public{
+        require(ESCROW_state == State.before_Initialize,"cant initiate now");
         require(BUYER_in == false);  
         if(msg.sender == buyer){
             BUYER_in = true;
         }
+    }
+    function contract_START_SELLER() public{
+        require(ESCROW_state == State.before_Initialize,"cant initiate now");
         require(SELLER_in == false);
         if(msg.sender == seller){
             SELLER_in = true;
         }
     }
 
-
-    function escrow_INITIALIZE() public onlyescrow_AGENT {
-        require(BUYER_in == true && SELLER_in == true,"buyer/seller not IN" );
-        require(ESCROW_state == State.before_Initialize,"cant initiate now");
-        ESCROW_state = State.awaiting_payment;
-
-    } 
+    function ESCROW_START()public onlyescrow_AGENT{
+         require(BUYER_in == true && SELLER_in == true,"buyer/seller not IN" );
+         ESCROW_state = State.awaiting_payment;
+    }
 
     function buyer_payment() payable public  onlybuyer {
         require(ESCROW_state == State.awaiting_payment,"cant pay now");
@@ -75,7 +76,7 @@ contract escrow{
     function delivered() payable public  onlyescrow_AGENT{
         require(ESCROW_state == State.awaiting_delivery,"payment not yet made by buyer");
 
-        seller.transfer(askingprice);
+        payable(seller).transfer(askingprice);
         ESCROW_state = State.compeleted;
 
         seller_delivery_SUCCCESS = true;
@@ -85,7 +86,7 @@ contract escrow{
     function buyer_withdraw() payable public onlybuyer{
         require(ESCROW_state == State.awaiting_delivery,"not at this stage bruh");
 
-        buyer.transfer(buyerprice);
+        payable(buyer).transfer(buyerprice);
 
         ESCROW_state = State.buyer_withdrawn;
         buyer_refund_SUCCESS = true;
